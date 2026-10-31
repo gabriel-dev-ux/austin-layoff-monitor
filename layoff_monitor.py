@@ -213,6 +213,9 @@ def parse_warn_xlsx(data):
     if not matrix:
         return []
     headers = [normalize_text(x).replace(" ", "_") for x in matrix[0]]
+    required = {"notice_date", "job_site_name", "county_name", "total_layoff_number"}
+    if not required.issubset(headers):
+        raise ValueError("WARN workbook schema changed; missing " + ", ".join(sorted(required - set(headers))))
     rows = []
     for values in matrix[1:]:
         row = dict(zip(headers, values))
@@ -263,14 +266,16 @@ def process_warn(state, cfg, now=None):
             headers["If-Modified-Since"] = old_meta["last_modified"]
         try:
             status, body, meta = request_bytes(url, headers)
-            successes += 1
             if status == 304:
+                successes += 1
                 continue
             digest = hashlib.sha256(body).hexdigest()
             if old_meta.get("sha256") == digest:
+                successes += 1
                 files[str(year)] = {**old_meta, **meta, "url": url, "sha256": digest}
                 continue
             rows = parse_warn_xlsx(body)
+            successes += 1
             for row in rows:
                 if normalize_text(row.get("county_name")) not in cfg["county_set"]:
                     continue
@@ -283,6 +288,7 @@ def process_warn(state, cfg, now=None):
             changed = True
         except HTTP_ERRORS as exc:
             log("WARN {} fetch failed; will retry: {}".format(year, exc))
+    cfg["_warn_fetch_successes"] = successes
     if successes and not initialized:
         state["warn_initialized"] = True
         changed = True
@@ -521,6 +527,7 @@ def process_news(state, cfg, show_suppressed=False, now=None):
             clusters[key] = event
             if initialized:
                 alerts.append(format_news(event))
+    cfg["_news_fetch_successes"] = successes
     if successes and not initialized:
         state["news_initialized"] = True
         changed = True
@@ -542,25 +549,41 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true", help="print messages instead of sending Slack DMs")
     parser.add_argument("--show-suppressed", action="store_true", help="log why each rejected news result was suppressed")
+    parser.add_argument("--seed-only", action="store_true", help="silently checkpoint current sources before restarting a restored deployment")
+    parser.add_argument("--check-sources", action="store_true", help="fail a dry run if WARN or any RSS feed is unavailable")
     args = parser.parse_args(argv)
+    if args.seed_only and args.dry_run:
+        parser.error("Choose either --seed-only or --dry-run")
+    if args.check_sources and not args.dry_run:
+        parser.error("--check-sources requires --dry-run")
     cfg = load_config()
-    token, user_ids = read_secrets()
-    if not args.dry_run and (not token.startswith("xoxb-") or not user_ids):
+    token, user_ids = ("", []) if args.dry_run or args.seed_only else read_secrets()
+    if not (args.dry_run or args.seed_only) and (not token.startswith("xoxb-") or not user_ids):
         log("ERROR: configure SLACK_BOT_TOKEN and SLACK_USER_IDS")
         return 2
     original = load_json(STATE_FILE, {})
     state = copy.deepcopy(original)
+    if args.seed_only:
+        state["warn_initialized"] = False
+        state["news_initialized"] = False
+        state["warn_files"] = {}
     warn_alerts, warn_changed = process_warn(state, cfg)
     news_alerts, news_changed = process_news(state, cfg, args.show_suppressed)
     prune_state(state, cfg)
     alerts = warn_alerts + news_alerts
+    if args.seed_only:
+        alerts = []
+    healthy = cfg.get("_warn_fetch_successes", 0) > 0 and cfg.get("_news_fetch_successes", 0) == len(build_news_feeds(cfg))
+    if (args.check_sources or args.seed_only) and not healthy:
+        log("Source validation failed; baseline not saved")
+        return 1
     if alerts:
         try:
             post_slack("\n\n".join(alerts[:20]), token, user_ids, args.dry_run)
         except (urllib.error.URLError, OSError) as exc:
             log("Slack delivery failed; state not saved: {}".format(exc))
             return 1
-    if warn_changed or news_changed or state != original:
+    if not args.dry_run and (warn_changed or news_changed or state != original):
         STATE_FILE.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
     log("complete: {} WARN + {} news alert(s)".format(len(warn_alerts), len(news_alerts)))
     return 0

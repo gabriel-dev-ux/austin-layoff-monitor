@@ -44,5 +44,5 @@ while [ $(( $(date +%s) - start )) -lt "$MAX_RUNTIME" ]; do
 done
 
 commit_state
-in_ci && (gh workflow run monitor.yml >/dev/null 2>&1 || true)
+in_ci && (gh workflow run monitor.yml -f mode=monitor >/dev/null 2>&1 || true)
 exit 0
