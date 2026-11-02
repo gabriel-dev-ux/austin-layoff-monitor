@@ -192,7 +192,9 @@ def parse_warn_xlsx(data):
         if re.search(r"<(?:!doctype\s+html|html|body)\b", text, re.I):
             raise ValueError("TWC returned an HTML page instead of its WARN workbook" +
                              (": " + detail if detail else ""))
-        raise ValueError("TWC response is not an XLSX workbook")
+        preview = re.sub(r"\s+", " ", text).strip()[:160]
+        raise ValueError("TWC response is not an XLSX workbook ({} bytes; prefix {}; preview {!r})".format(
+            len(data), data[:12].hex(), preview))
     ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         strings = _xlsx_shared_strings(archive)

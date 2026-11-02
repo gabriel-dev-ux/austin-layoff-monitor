@@ -23,15 +23,29 @@
     }
   },
   "news_initialized": true,
-  "news_seen": {
-    "2aeb6a4cb3162b88fd5eab27": "2026-10-05T16:41:50Z",
-    "70f565d320261e2a6f35e802": "2026-09-23T16:01:47Z",
-    "aa6686a58d039346269f53f1": "2026-09-23T04:13:04Z",
-    "bb31b47e9400824e9ff0ba47": "2026-09-25T15:00:25Z",
-    "d3d38ae20191987989a561b0": "2026-09-24T07:26:03Z",
-    "fc96242b3f408bc6fe019f42": "2026-09-30T13:52:22Z"
+  "news_seen": {},
+  "warn_events": {
+    "0fe9961b9bff52da38d1": "366b116e46a10f473056",
+    "184ec05f0dcd8b893a11": "35c060eacee5bdf5dcb2",
+    "3e848419a776df1f5907": "286c20f39e51b09c274b",
+    "5b905cc1e32c48e4bb1f": "9361bd3cc1bec286e986",
+    "6ddab45176f00e40d650": "9e65110208f6830ea95e",
+    "70281cb77b062160bce0": "76fbe69e95a1aca06ff5",
+    "78538425e331d0bc3a61": "af68071cd5a7e7769dfb",
+    "79bb72717c4a53cc3ca0": "d7d446c8f436f8fffe9a",
+    "7cff2205a835edeb9061": "0ae1ffbdf746654e0aba",
+    "971ee73c36ae5587704f": "14526164e74637071202",
+    "a56a16a33f90f55443e7": "fb19f97caeaca2c022b5",
+    "d82eabfd83f774c72175": "7118313141f5cec04fc0"
   },
-  "warn_events": {},
-  "warn_files": {},
+  "warn_files": {
+    "2026": {
+      "checked_at": "2026-11-02T15:36:30Z",
+      "etag": "",
+      "last_modified": "Wed, 28 Oct 2026 14:23:59 GMT",
+      "sha256": "43d9e044c03f77fcfb071a4903e4f956077c79cf96a3b0c3b4c05d1ada86d9e4",
+      "url": "https://www.twc.texas.gov/sites/default/files/oei/docs/warn-act-listings-2026-twc.xlsx"
+    }
+  },
   "warn_initialized": true
 }
