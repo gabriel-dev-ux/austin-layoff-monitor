@@ -16,6 +16,10 @@ The existing scope is **Travis, Williamson, Hays, Bastrop and Caldwell counties*
 
 The restored deployment keeps five-minute polling, the hourly backstop, state commits and self-chaining. Activation is gated by the `MONITOR_ENABLED` repository variable. Dry runs no longer read Slack credentials or write state. Workbook schema changes and unavailable sources fail source validation visibly. The new silent baseline mode prevents the weeks-old local checkpoint from causing a backlog of historical alerts after restoration.
 
+## Hosting validation, November 2, 2026
+
+All 29 tests pass. The official TWC workbook and all five news feeds work from the local Mac, and a fresh silent baseline has been saved. GitHub-hosted Ubuntu and Intel macOS runners receive an empty response for the TWC workbook, so the hosted source check correctly fails. News feeds remain reachable. Do not treat a published workflow or a successful local baseline as proof that official WARN polling works on GitHub. Keep activation paused until source access is resolved or choose a runtime with verified TWC access.
+
 ## Run and test
 
 Standard-library Python; no third-party packages or paid APIs.
