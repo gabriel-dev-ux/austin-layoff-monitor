@@ -8,6 +8,10 @@ import layoff_monitor as m
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_html_response_is_reported_as_a_source_failure(self):
+        with self.assertRaisesRegex(ValueError, "HTML page instead of its WARN workbook: Access Denied"):
+            m.parse_warn_xlsx(b'<!doctype html><html><title>Access Denied</title></html>')
+
     def test_dry_run_never_reads_slack_credentials_or_writes_state(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp)/"state.json"

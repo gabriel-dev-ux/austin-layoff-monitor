@@ -185,6 +185,14 @@ def _xlsx_shared_strings(archive):
 
 
 def parse_warn_xlsx(data):
+    if not zipfile.is_zipfile(io.BytesIO(data)):
+        text = data[:16384].decode("utf-8", "replace")
+        title = re.search(r"<title[^>]*>(.*?)</title>", text, re.I | re.S)
+        detail = re.sub(r"\s+", " ", html.unescape(title.group(1))).strip()[:120] if title else ""
+        if re.search(r"<(?:!doctype\s+html|html|body)\b", text, re.I):
+            raise ValueError("TWC returned an HTML page instead of its WARN workbook" +
+                             (": " + detail if detail else ""))
+        raise ValueError("TWC response is not an XLSX workbook")
     ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         strings = _xlsx_shared_strings(archive)
